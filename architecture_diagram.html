@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepoSync — Architecture Diagram</title>
+    <meta name="description"
+        content="Professional architecture diagram for RepoSync - Automated RAG Knowledge Base Updater">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2236;
+            --surface3: #1e293b;
+            --border: #2d3a52;
+            --border2: #374151;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #64748b;
+            --accent: #6366f1;
+            --accent2: #818cf8;
+            --accent-glow: rgba(99, 102, 241, .25);
+            --green: #10b981;
+            --green2: #34d399;
+            --green-bg: rgba(16, 185, 129, .08);
+            --blue: #3b82f6;
+            --blue2: #60a5fa;
+            --blue-bg: rgba(59, 130, 246, .08);
+            --purple: #a855f7;
+            --purple2: #c084fc;
+            --purple-bg: rgba(168, 85, 247, .08);
+            --orange: #f97316;
+            --orange2: #fb923c;
+            --orange-bg: rgba(249, 115, 22, .08);
+            --cyan: #06b6d4;
+            --cyan2: #22d3ee;
+            --cyan-bg: rgba(6, 182, 212, .08);
+            --pink: #ec4899;
+            --pink2: #f472b6;
+            --pink-bg: rgba(236, 72, 153, .08);
+            --amber: #f59e0b;
+            --amber2: #fbbf24;
+            --red: #ef4444;
+            --red2: #f87171;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden
+        }
+
+        .page {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 40px 24px 80px
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+            position: relative
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent)
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+            color: #fff
+        }
+
+        .badge svg {
+            width: 14px;
+            height: 14px
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--purple2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px
+        }
+
+        .subtitle {
+            font-size: clamp(14px, 1.6vw, 17px);
+            color: var(--text2);
+            max-width: 700px;
+            margin: 0 auto
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text)
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        /* High-Level Diagram */
+        .hl-diagram {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px
+        }
+
+        .hl-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        /* Layer Cards */
+        .layer {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all .3s
+        }
+
+        .layer:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+            transform: translateY(-2px)
+        }
+
+        .layer-badge {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            padding: 3px 12px;
+            border-radius: 0 0 8px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .layer-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .layer-title svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0
+        }
+
+        .layer-desc {
+            font-size: 12px;
+            color: var(--text3);
+            margin-bottom: 12px
+        }
+
+        .layer-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px
+        }
+
+        .layer-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text2);
+            transition: all .2s
+        }
+
+        .layer-item:hover {
+            border-color: var(--accent);
+            color: var(--text)
+        }
+
+        /* Trigger Layer */
+        .trigger-layer {
+            background: linear-gradient(135deg, var(--cyan-bg), transparent);
+            border-color: rgba(6, 182, 212, .2)
+        }
+
+        .trigger-layer .layer-badge {
+            background: var(--cyan);
+            color: #000
+        }
+
+        .trigger-layer .layer-title svg {
+            color: var(--cyan)
+        }
+
+        /* API Layer */
+        .api-layer {
+            background: linear-gradient(135deg, var(--blue-bg), transparent);
+            border-color: rgba(59, 130, 246, .2)
+        }
+
+        .api-layer .layer-badge {
+            background: var(--blue);
+            color: #fff
+        }
+
+        .api-layer .layer-title svg {
+            color: var(--blue)
+        }
+
+        /* Config Layer */
+        .config-layer {
+            background: linear-gradient(135deg, var(--amber2)08, transparent);
+            border-color: rgba(245, 158, 11, .15)
+        }
+
+        .config-layer .layer-badge {
+            background: var(--amber);
+            color: #000
+        }
+
+        .config-layer .layer-title svg {
+            color: var(--amber)
+        }
+
+        /* Core Layer */
+        .core-layer {
+            background: linear-gradient(135deg, var(--purple-bg), transparent);
+            border-color: rgba(168, 85, 247, .2)
+        }
+
+        .core-layer .layer-badge {
+            background: var(--purple);
+            color: #fff
+        }
+
+        .core-layer .layer-title svg {
+            color: var(--purple)
+        }
+
+        /* Processor Layer */
+        .processor-layer {
+            background: linear-gradient(135deg, var(--green-bg), transparent);
+            border-color: rgba(16, 185, 129, .2)
+        }
+
+        .processor-layer .layer-badge {
+            background: var(--green);
+            color: #fff
+        }
+
+        .processor-layer .layer-title svg {
+            color: var(--green)
+        }
+
+        /* Infra Layer */
+        .infra-layer {
+            background: linear-gradient(135deg, var(--orange-bg), transparent);
+            border-color: rgba(249, 115, 22, .2)
+        }
+
+        .infra-layer .layer-badge {
+            background: var(--orange);
+            color: #fff
+        }
+
+        .infra-layer .layer-title svg {
+            color: var(--orange)
+        }
+
+        /* External Layer */
+        .external-layer {
+            background: linear-gradient(135deg, var(--pink-bg), transparent);
+            border-color: rgba(236, 72, 153, .2)
+        }
+
+        .external-layer .layer-badge {
+            background: var(--pink);
+            color: #fff
+        }
+
+        .external-layer .layer-title svg {
+            color: var(--pink)
+        }
+
+        /* Flow Arrow */
+        .flow-arrow {
+            display: flex;
+            justify-content: center;
+            padding: 4px 0;
+            color: var(--text3);
+            font-size: 18px;
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: .4
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        /* Data Flow Section */
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px
+        }
+
+        .flow-step {
+            text-align: center;
+            padding: 16px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            position: relative;
+            transition: all .3s
+        }
+
+        .flow-step:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        .flow-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff
+        }
+
+        .flow-step h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .flow-step p {
+            font-size: 10px;
+            color: var(--text3)
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text3);
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .flow-step:last-child::after {
+            display: none
+        }
+
+        /* SOLID Cards */
+        .solid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px
+        }
+
+        .solid-card {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            transition: all .3s
+        }
+
+        .solid-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        .solid-letter {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px
+        }
+
+        .solid-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .solid-card p {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        /* Interface Mapping */
+        .iface-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px
+        }
+
+        .iface-card {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            transition: all .3s
+        }
+
+        .iface-card:hover {
+            border-color: var(--accent)
+        }
+
+        .iface-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--purple2);
+            margin-bottom: 4px
+        }
+
+        .iface-impl {
+            font-size: 11px;
+            color: var(--text2);
+            margin-bottom: 6px
+        }
+
+        .iface-methods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px
+        }
+
+        .iface-method {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text3)
+        }
+
+        /* Deploy Cards */
+        .deploy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px
+        }
+
+        .deploy-card {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            text-align: center;
+            transition: all .3s
+        }
+
+        .deploy-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        .deploy-card.recommended {
+            border-color: var(--green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, .15)
+        }
+
+        .deploy-icon {
+            font-size: 28px;
+            margin-bottom: 8px
+        }
+
+        .deploy-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .deploy-card p {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .deploy-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 700;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        /* DI Container */
+        .di-box {
+            border: 2px dashed var(--accent);
+            border-radius: 14px;
+            padding: 20px;
+            background: rgba(99, 102, 241, .03);
+            text-align: center
+        }
+
+        .di-box h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent2);
+            margin-bottom: 4px
+        }
+
+        .di-box p {
+            font-size: 12px;
+            color: var(--text3);
+            margin-bottom: 12px
+        }
+
+        .di-deps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px
+        }
+
+        .di-dep {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text2)
+        }
+
+        /* Dir Structure */
+        .dir-tree {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            color: var(--text2);
+            overflow-x: auto;
+            white-space: pre
+        }
+
+        .dir-tree .folder {
+            color: var(--blue2)
+        }
+
+        .dir-tree .file {
+            color: var(--text3)
+        }
+
+        .dir-tree .comment {
+            color: var(--green);
+            font-family: 'Inter', sans-serif;
+            font-style: italic;
+            font-size: 11px
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text3);
+            font-size: 12px
+        }
+
+        /* Responsive */
+        @media(max-width:768px) {
+            .hl-row {
+                flex-direction: column
+            }
+
+            .flow-step::after {
+                display: none
+            }
+
+            .page {
+                padding: 24px 16px 60px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg> System Architecture</div>
+            <h1>RepoSync Architecture</h1>
+            <p class="subtitle">Automated RAG Knowledge Base Updater — Enterprise-grade system for synchronizing GitHub
+                repositories with vector databases using SOLID principles &amp; Dependency Injection.</p>
+        </header>
+
+        <!-- ═══════════════════ HIGH-LEVEL LAYERED ARCHITECTURE ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--accent)"></span> High-Level Layered
+                Architecture</div>
+
+            <div class="hl-diagram">
+                <!-- Row 1: Triggers -->
+                <div class="hl-row">
+                    <div class="layer trigger-layer" style="flex:1;max-width:800px">
+                        <span class="layer-badge">Trigger Layer</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg> Scheduling & Triggers</div>
+                        <div class="layer-desc">Multiple entry points to initiate synchronization pipelines</div>
+                        <div class="layer-items">
+                            <span class="layer-item">⭐ GitHub Actions (FREE)</span>
+                            <span class="layer-item">☁️ Google Cloud Scheduler</span>
+                            <span class="layer-item">⏰ APScheduler (Self-Hosted)</span>
+                            <span class="layer-item">🖥️ Manual CLI Scripts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">▼</div>
+
+                <!-- Row 2: API + Config -->
+                <div class="hl-row">
+                    <div class="layer api-layer" style="flex:1;max-width:390px">
+                        <span class="layer-badge">API</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path
+                                    d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                            </svg> API Layer — <code style="font-size:11px">src/api/</code></div>
+                        <div class="layer-desc">Flask REST endpoints for cloud integration</div>
+                        <div class="layer-items">
+                            <span class="layer-item">cloud_scheduler_endpoint.py</span>
+                            <span class="layer-item">POST /trigger/incremental</span>
+                            <span class="layer-item">POST /trigger/full</span>
+                            <span class="layer-item">POST /trigger/validate</span>
+                            <span class="layer-item">GET /health</span>
+                        </div>
+                    </div>
+                    <div class="layer config-layer" style="flex:1;max-width:390px">
+                        <span class="layer-badge">Config</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg> Configuration — <code style="font-size:11px">src/config/</code></div>
+                        <div class="layer-desc">Pydantic Settings from environment variables</div>
+                        <div class="layer-items">
+                            <span class="layer-item">AppConfig</span>
+                            <span class="layer-item">GitHubConfig</span>
+                            <span class="layer-item">MilvusConfig</span>
+                            <span class="layer-item">EmbeddingConfig</span>
+                            <span class="layer-item">SchedulerConfig</span>
+                            <span class="layer-item">ProcessingConfig</span>
+                            <span class="layer-item">NotificationConfig</span>
+                            <span class="layer-item">DatabaseConfig</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">▼</div>
+
+                <!-- Row 3: DI Container -->
+                <div class="hl-row">
+                    <div class="di-box" style="flex:1;max-width:800px">
+                        <h3>🏗️ DIContainer — <code style="font-size:12px;color:var(--text2)">src/container.py</code>
+                        </h3>
+                        <p>Dependency Injection Container — IoC Principle — Wires all components together</p>
+                        <div class="di-deps">
+                            <span class="di-dep">get_github_client()</span>
+                            <span class="di-dep">get_embedding_service()</span>
+                            <span class="di-dep">get_vector_store()</span>
+                            <span class="di-dep">get_metadata_repository()</span>
+                            <span class="di-dep">get_document_processor()</span>
+                            <span class="di-dep">get_notifier()</span>
+                            <span class="di-dep">get_validation_service()</span>
+                            <span class="di-dep">get_update_orchestrator()</span>
+                            <span class="di-dep">get_scheduler()</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">▼</div>
+
+                <!-- Row 4: Core (Domain) -->
+                <div class="hl-row">
+                    <div class="layer core-layer" style="flex:1;max-width:800px">
+                        <span class="layer-badge">Domain Core</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                            </svg> Core Domain — <code style="font-size:11px">src/core/</code></div>
+                        <div class="layer-desc">Pure domain models, abstract interfaces (ABCs), and custom exceptions —
+                            zero external dependencies</div>
+                        <div class="layer-items">
+                            <span class="layer-item">models.py</span>
+                            <span class="layer-item">interfaces.py</span>
+                            <span class="layer-item">exceptions.py</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">Repository</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">FileMetadata</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">DocumentChunk</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">EmbeddedChunk</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">UpdateResult</span>
+                            <span class="layer-item"
+                                style="border-color:var(--purple);color:var(--purple2)">ProjectConfig</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">▼</div>
+
+                <!-- Row 5: Processor + Infrastructure -->
+                <div class="hl-row">
+                    <div class="layer processor-layer" style="flex:1;max-width:390px">
+                        <span class="layer-badge">Business Logic</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                            </svg> Processor — <code style="font-size:11px">src/processor/</code></div>
+                        <div class="layer-desc">Core business logic and orchestration</div>
+                        <div class="layer-items">
+                            <span class="layer-item">UpdateOrchestrator</span>
+                            <span class="layer-item">DocumentProcessor</span>
+                            <span class="layer-item">ValidationService</span>
+                            <span class="layer-item">run_update()</span>
+                            <span class="layer-item">run_incremental_update()</span>
+                            <span class="layer-item">chunk_document()</span>
+                            <span class="layer-item">clean_content()</span>
+                            <span class="layer-item">validate_update_result()</span>
+                        </div>
+                    </div>
+                    <div class="layer infra-layer" style="flex:1;max-width:390px">
+                        <span class="layer-badge">Infrastructure</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="2" width="20" height="8" rx="2" />
+                                <rect x="2" y="14" width="20" height="8" rx="2" />
+                                <circle cx="6" cy="6" r="1" />
+                                <circle cx="6" cy="18" r="1" />
+                            </svg> Infrastructure — <code style="font-size:11px">src/infrastructure/</code></div>
+                        <div class="layer-desc">External service adapters implementing core interfaces</div>
+                        <div class="layer-items">
+                            <span class="layer-item">GitHubClient</span>
+                            <span class="layer-item">AzureEmbeddingService</span>
+                            <span class="layer-item">OpenAIEmbeddingService</span>
+                            <span class="layer-item">MilvusVectorStore</span>
+                            <span class="layer-item">MetadataRepository</span>
+                            <span class="layer-item">CompositeNotifier</span>
+                            <span class="layer-item">SlackNotifier</span>
+                            <span class="layer-item">EmailNotifier</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">▼</div>
+
+                <!-- Row 6: External Services -->
+                <div class="hl-row">
+                    <div class="layer external-layer" style="flex:1;max-width:800px">
+                        <span class="layer-badge">External</span>
+                        <div class="layer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" />
+                            </svg> External Services &amp; Storage</div>
+                        <div class="layer-desc">Third-party APIs and data stores accessed via infrastructure adapters
+                        </div>
+                        <div class="layer-items">
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">GitHub API
+                                (PyGithub)</span>
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">Azure OpenAI
+                                API</span>
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">Milvus / Zilliz
+                                Cloud</span>
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">SQLite
+                                (Metadata DB)</span>
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">Slack
+                                Webhooks</span>
+                            <span class="layer-item" style="border-color:var(--pink);color:var(--pink2)">SMTP
+                                Email</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════ DATA FLOW PIPELINE ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--green)"></span> Update Pipeline — Data
+                Flow</div>
+            <div class="flow-grid">
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--blue)">1</div>
+                    <h4>Discovery</h4>
+                    <p>Find repos matching filter in GitHub org</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--purple)">2</div>
+                    <h4>Change Detection</h4>
+                    <p>Compare commit hashes to find changed files</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--cyan)">3</div>
+                    <h4>Content Fetch</h4>
+                    <p>Retrieve changed file content from GitHub</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--green)">4</div>
+                    <h4>Processing</h4>
+                    <p>Clean, normalize &amp; chunk documents</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--orange)">5</div>
+                    <h4>Embedding</h4>
+                    <p>Generate vectors via Azure OpenAI</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--pink)">6</div>
+                    <h4>Vector Storage</h4>
+                    <p>Upsert embeddings into Milvus Cloud</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--amber)">7</div>
+                    <h4>Validation</h4>
+                    <p>Verify data integrity &amp; completeness</p>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-num" style="background:var(--red)">8</div>
+                    <h4>Notification</h4>
+                    <p>Send Slack / Email alerts</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════ INTERFACE → IMPLEMENTATION MAPPING ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--purple)"></span> Interface →
+                Implementation Mapping (Dependency Inversion)</div>
+            <div class="iface-grid">
+                <div class="iface-card">
+                    <div class="iface-name">IRepositoryDiscovery</div>
+                    <div class="iface-impl">→ <strong>GitHubClient</strong></div>
+                    <div class="iface-methods"><span class="iface-method">discover_repositories()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IChangeDetector</div>
+                    <div class="iface-impl">→ <strong>GitHubClient</strong></div>
+                    <div class="iface-methods"><span class="iface-method">detect_changes()</span><span
+                            class="iface-method">detect_changes_since_date()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IContentFetcher</div>
+                    <div class="iface-impl">→ <strong>GitHubClient</strong></div>
+                    <div class="iface-methods"><span class="iface-method">fetch_file_content()</span><span
+                            class="iface-method">fetch_batch_content()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IDocumentProcessor</div>
+                    <div class="iface-impl">→ <strong>DocumentProcessor</strong></div>
+                    <div class="iface-methods"><span class="iface-method">should_process_file()</span><span
+                            class="iface-method">clean_content()</span><span
+                            class="iface-method">chunk_document()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IEmbeddingGenerator</div>
+                    <div class="iface-impl">→ <strong>AzureEmbeddingService</strong> /
+                        <strong>OpenAIEmbeddingService</strong></div>
+                    <div class="iface-methods"><span class="iface-method">generate_embedding()</span><span
+                            class="iface-method">generate_embeddings_batch()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IVectorStore</div>
+                    <div class="iface-impl">→ <strong>MilvusVectorStore</strong></div>
+                    <div class="iface-methods"><span class="iface-method">initialize_collection()</span><span
+                            class="iface-method">insert_vectors()</span><span
+                            class="iface-method">delete_vectors_by_metadata()</span><span
+                            class="iface-method">search_similar()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IMetadataRepository</div>
+                    <div class="iface-impl">→ <strong>MetadataRepository</strong> (SQLite + SQLAlchemy)</div>
+                    <div class="iface-methods"><span class="iface-method">save_repository()</span><span
+                            class="iface-method">save_file_metadata()</span><span
+                            class="iface-method">get_tracked_files()</span><span
+                            class="iface-method">save_update_result()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">INotifier</div>
+                    <div class="iface-impl">→ <strong>CompositeNotifier</strong> (Slack + Email)</div>
+                    <div class="iface-methods"><span class="iface-method">notify_success()</span><span
+                            class="iface-method">notify_failure()</span></div>
+                </div>
+                <div class="iface-card">
+                    <div class="iface-name">IScheduler</div>
+                    <div class="iface-impl">→ <strong>APSchedulerService</strong></div>
+                    <div class="iface-methods"><span class="iface-method">schedule_update()</span><span
+                            class="iface-method">run_once()</span><span class="iface-method">start()</span><span
+                            class="iface-method">stop()</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════ SOLID PRINCIPLES ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--amber)"></span> SOLID Principles
+                Applied</div>
+            <div class="solid-grid">
+                <div class="solid-card">
+                    <div class="solid-letter" style="color:var(--blue)">S</div>
+                    <h4>Single Responsibility</h4>
+                    <p>Each class has one purpose — GitHubClient handles GitHub API, DocumentProcessor handles chunking,
+                        MilvusVectorStore handles vector ops.</p>
+                </div>
+                <div class="solid-card">
+                    <div class="solid-letter" style="color:var(--green)">O</div>
+                    <h4>Open / Closed</h4>
+                    <p>Extend via new interface implementations (e.g., add PineconeStore) without modifying existing
+                        code.</p>
+                </div>
+                <div class="solid-card">
+                    <div class="solid-letter" style="color:var(--purple)">L</div>
+                    <h4>Liskov Substitution</h4>
+                    <p>Any IVectorStore implementation can be swapped seamlessly — MilvusVectorStore or a future
+                        PineconeStore.</p>
+                </div>
+                <div class="solid-card">
+                    <div class="solid-letter" style="color:var(--orange)">I</div>
+                    <h4>Interface Segregation</h4>
+                    <p>Nine small, focused interfaces (IRepositoryDiscovery, IChangeDetector, etc.) instead of one
+                        monolithic interface.</p>
+                </div>
+                <div class="solid-card">
+                    <div class="solid-letter" style="color:var(--pink)">D</div>
+                    <h4>Dependency Inversion</h4>
+                    <p>UpdateOrchestrator depends on abstractions (interfaces), not concrete classes. DIContainer
+                        handles wiring.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════ DEPLOYMENT OPTIONS ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--cyan)"></span> Deployment Options</div>
+            <div class="deploy-grid">
+                <div class="deploy-card recommended">
+                    <div class="deploy-icon">⭐</div>
+                    <h4>GitHub Actions</h4>
+                    <p>Free for public repos. Zero infrastructure. Cron-scheduled workflows trigger CLI scripts.</p>
+                    <span class="deploy-tag" style="background:var(--green);color:#fff">Recommended</span>
+                </div>
+                <div class="deploy-card">
+                    <div class="deploy-icon">☁️</div>
+                    <h4>Google Cloud Run</h4>
+                    <p>Dockerized Flask API on Cloud Run, triggered by Cloud Scheduler. Serverless &amp; auto-scaling.
+                    </p>
+                    <span class="deploy-tag" style="background:var(--blue);color:#fff">Production</span>
+                </div>
+                <div class="deploy-card">
+                    <div class="deploy-icon">🏠</div>
+                    <h4>Choreo / PaaS</h4>
+                    <p>Deploy container via Dockerfile to Choreo or any container platform. Uses Gunicorn + Flask.</p>
+                    <span class="deploy-tag" style="background:var(--purple);color:#fff">Container</span>
+                </div>
+                <div class="deploy-card">
+                    <div class="deploy-icon">🖥️</div>
+                    <h4>Self-Hosted</h4>
+                    <p>Run <code>python main.py</code> with APScheduler for daily cron-like execution on your own
+                        server.</p>
+                    <span class="deploy-tag" style="background:var(--orange);color:#fff">Self-Managed</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════ DIRECTORY STRUCTURE ═══════════════════ -->
+        <section class="section">
+            <div class="section-title"><span class="dot" style="background:var(--text3)"></span> Project Directory
+                Structure</div>
+            <div class="dir-tree">
+                <span class="folder">RepoSync/</span>
+                ├── <span class="file">main.py</span> <span class="comment"># Entry point — starts Flask API
+                    server</span>
+                ├── <span class="file">Dockerfile</span> <span class="comment"># Container for Cloud Run / Choreo</span>
+                ├── <span class="file">requirements.txt</span> <span class="comment"># Python dependencies</span>
+                ├── <span class="file">pyproject.toml</span> <span class="comment"># Project metadata &amp; build
+                    config</span>
+                ├── <span class="folder">src/</span>
+                │ ├── <span class="file">container.py</span> <span class="comment"># DI Container — IoC wiring</span>
+                │ ├── <span class="folder">api/</span>
+                │ │ └── <span class="file">cloud_scheduler_endpoint.py</span> <span class="comment"># Flask REST
+                    API</span>
+                │ ├── <span class="folder">config/</span>
+                │ │ ├── <span class="file">settings.py</span> <span class="comment"># Pydantic Settings (env
+                    vars)</span>
+                │ │ └── <span class="file">project_config.py</span> <span class="comment"># Multi-project
+                    configuration</span>
+                │ ├── <span class="folder">core/</span> <span class="comment"># ← Zero external deps</span>
+                │ │ ├── <span class="file">models.py</span> <span class="comment"># Domain dataclasses</span>
+                │ │ ├── <span class="file">interfaces.py</span> <span class="comment"># 9 Abstract Base Classes</span>
+                │ │ └── <span class="file">exceptions.py</span> <span class="comment"># Custom exception
+                    hierarchy</span>
+                │ ├── <span class="folder">processor/</span> <span class="comment"># ← Business logic</span>
+                │ │ ├── <span class="file">update_orchestrator.py</span> <span class="comment"># Main pipeline
+                    coordinator</span>
+                │ │ ├── <span class="file">document_processor.py</span> <span class="comment"># Cleaning &amp; chunking
+                    (20+ formats)</span>
+                │ │ └── <span class="file">validation_service.py</span> <span class="comment"># Post-update integrity
+                    checks</span>
+                │ ├── <span class="folder">infrastructure/</span> <span class="comment"># ← External adapters</span>
+                │ │ ├── <span class="file">github_client.py</span> <span class="comment"># GitHub API (3
+                    interfaces)</span>
+                │ │ ├── <span class="file">azure_embedding_service.py</span> <span class="comment"># Azure OpenAI
+                    embeddings</span>
+                │ │ ├── <span class="file">embedding_service.py</span> <span class="comment"># OpenAI embeddings</span>
+                │ │ ├── <span class="file">milvus_store.py</span> <span class="comment"># Milvus vector DB (1000+
+                    LOC)</span>
+                │ │ ├── <span class="file">metadata_repository.py</span> <span class="comment"># SQLite via
+                    SQLAlchemy</span>
+                │ │ └── <span class="file">notifier.py</span> <span class="comment"># Composite: Slack + Email</span>
+                │ ├── <span class="folder">scheduler/</span>
+                │ │ └── <span class="file">scheduler_service.py</span> <span class="comment"># APScheduler cron
+                    wrapper</span>
+                │ └── <span class="folder">utils/</span>
+                │ └── <span class="file">logging_config.py</span> <span class="comment"># Rotating file + console
+                    logging</span>
+                ├── <span class="folder">scripts/</span> <span class="comment"># CLI tools</span>
+                │ ├── <span class="file">initial_setup.py</span> <span class="comment"># First-time full sync</span>
+                │ ├── <span class="file">incremental_update.py</span> <span class="comment"># Date-based fast
+                    sync</span>
+                │ ├── <span class="file">manual_update.py</span> <span class="comment"># One-off full update</span>
+                │ ├── <span class="file">manage_projects.py</span> <span class="comment"># Multi-project CRUD CLI</span>
+                │ ├── <span class="file">validate.py</span> <span class="comment"># Validation &amp; diagnostics</span>
+                │ └── <span class="file">query.py</span> <span class="comment"># RAG query tool</span>
+                ├── <span class="folder">.github/workflows/</span> <span class="comment"># CI/CD &amp; Scheduling</span>
+                │ ├── <span class="file">reposync-scheduled.yml</span> <span class="comment"># GitHub Actions
+                    scheduler</span>
+                │ ├── <span class="file">ci.yml</span> <span class="comment"># Continuous integration</span>
+                │ ├── <span class="file">deploy-gcp.yml</span> <span class="comment"># GCP deployment pipeline</span>
+                │ └── <span class="file">release.yml</span> <span class="comment"># Release automation</span>
+                ├── <span class="folder">data/</span> <span class="comment"># SQLite metadata DB</span>
+                ├── <span class="folder">logs/</span> <span class="comment"># Application logs</span>
+                └── <span class="folder">tests/</span> <span class="comment"># Test suite</span>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>RepoSync Architecture Diagram — Built with ❤️ for automated knowledge management</p>
+            <p style="margin-top:4px;font-size:11px">Generated on February 20, 2026 • SOLID Architecture • Dependency
+                Injection • Clean Architecture</p>
+        </footer>
+    </div>
+</body>
+
+</html>

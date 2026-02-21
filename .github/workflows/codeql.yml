@@ -1,0 +1,88 @@
+# ──────────────────────────────────────────────────
+# CodeQL Security Analysis
+# ──────────────────────────────────────────────────
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6:00 AM UTC
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: 🔒 CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['html']
+        # CodeQL does not natively support HTML as a language, but we can use
+        # it to scan for any embedded JavaScript patterns
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Scanning for any inline JS in HTML
+          queries: security-extended
+
+      - name: 🏗️ Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ────────────── Security Audit ──────────────
+  security-audit:
+    name: 🛡️ Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Scan for secrets
+        run: |
+          echo "🔍 Scanning for potential secrets in HTML..."
+          # Check for common secret patterns
+          if grep -rniE "(api[_-]?key|secret|password|token|private[_-]?key)\s*[:=]\s*['\"][^'\"]+['\"]" architecture_diagram.html; then
+            echo "⚠️ Potential secrets found in code!"
+            exit 1
+          fi
+          echo "✅ No secrets detected"
+
+      - name: 🔍 Scan for suspicious URLs
+        run: |
+          echo "🔍 Checking for suspicious external URLs..."
+          # Extract and list all URLs for review
+          grep -oP 'https?://[^\s"<>]+' architecture_diagram.html | sort -u || true
+          echo "✅ URL scan complete"
+
+      - name: 🐳 Scan Dockerfile
+        run: |
+          echo "🔍 Scanning Dockerfile for best practices..."
+          # Check for latest tag usage
+          if grep -q "FROM.*:latest" Dockerfile; then
+            echo "⚠️ Warning: Using 'latest' tag in Dockerfile"
+          fi
+          # Check for USER instruction
+          if grep -q "adduser\|USER" Dockerfile; then
+            echo "✅ Non-root user configured"
+          else
+            echo "⚠️ Warning: No non-root user found"
+          fi
+          echo "✅ Dockerfile scan complete"

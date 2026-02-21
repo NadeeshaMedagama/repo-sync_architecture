@@ -1,0 +1,86 @@
+# ──────────────────────────────────────────────────
+# GitHub Marketplace Action Definition
+# RepoSync Architecture Diagram Viewer
+# ──────────────────────────────────────────────────
+name: 'RepoSync Architecture Diagram'
+description: 'Deploy the RepoSync Architecture Diagram — an interactive visualization of the Automated RAG Knowledge Base Updater system architecture.'
+author: 'nadeeshame'
+
+branding:
+  icon: 'layers'
+  color: 'purple'
+
+inputs:
+  port:
+    description: 'Port to serve the architecture diagram on'
+    required: false
+    default: '8080'
+  container-name:
+    description: 'Name for the Docker container'
+    required: false
+    default: 'reposync-architecture'
+  image-tag:
+    description: 'Docker image tag to use'
+    required: false
+    default: 'latest'
+
+outputs:
+  url:
+    description: 'URL where the architecture diagram is accessible'
+    value: ${{ steps.deploy.outputs.url }}
+  container-id:
+    description: 'Docker container ID'
+    value: ${{ steps.deploy.outputs.container_id }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          architecture_diagram.html
+          Dockerfile
+          nginx.conf
+
+    - name: 🐳 Build Docker image
+      shell: bash
+      run: |
+        docker build -t reposync-architecture:${{ inputs.image-tag }} .
+
+    - name: 🚀 Deploy container
+      id: deploy
+      shell: bash
+      run: |
+        CONTAINER_ID=$(docker run -d \
+          --name ${{ inputs.container-name }} \
+          -p ${{ inputs.port }}:80 \
+          reposync-architecture:${{ inputs.image-tag }})
+
+        echo "container_id=$CONTAINER_ID" >> $GITHUB_OUTPUT
+        echo "url=http://localhost:${{ inputs.port }}" >> $GITHUB_OUTPUT
+
+        # Wait for container to be ready
+        sleep 3
+
+        # Verify deployment
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${{ inputs.port }}/ || echo "000")
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "✅ Architecture diagram deployed successfully at http://localhost:${{ inputs.port }}"
+        else
+          echo "❌ Deployment verification failed (HTTP $HTTP_CODE)"
+          docker logs ${{ inputs.container-name }}
+          exit 1
+        fi
+
+    - name: 📝 Deployment Summary
+      shell: bash
+      run: |
+        echo "## 🏗️ RepoSync Architecture Diagram" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| **URL** | http://localhost:${{ inputs.port }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Container** | ${{ inputs.container-name }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Image Tag** | ${{ inputs.image-tag }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Live Demo** | [repo-sync-architecture.netlify.app](https://repo-sync-architecture.netlify.app/) |" >> $GITHUB_STEP_SUMMARY

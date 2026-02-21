@@ -3,7 +3,7 @@
 # RepoSync Architecture Diagram Viewer
 # ──────────────────────────────────────────────────
 name: 'RepoSync Architecture Diagram'
-description: 'Deploy the RepoSync Architecture Diagram — an interactive visualization of the Automated RAG Knowledge Base Updater system architecture.'
+description: 'Interactive diagram showing RepoSync pipeline syncing repositories to RAG databases.'
 author: 'nadeeshame'
 
 branding:

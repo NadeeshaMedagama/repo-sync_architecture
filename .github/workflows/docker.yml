@@ -17,7 +17,8 @@ permissions:
 
 env:
   DOCKERHUB_REPO: nadeeshamedagama/reposync-architecture
-  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/reposync-architecture
+  # Force lowercase for OCI registry compatibility
+  GHCR_REPO: ghcr.io/nadeeshamedagama/reposync-architecture
 
 jobs:
   # ────────────── Build & Test ──────────────
@@ -134,10 +135,22 @@ jobs:
 
       - name: 📝 Docker Hub Description
         if: github.ref == 'refs/heads/master'
-        uses: peter-evans/dockerhub-description@v5
+        uses: peter-evans/dockerhub-description@v4
+        continue-on-error: true
+        id: dockerhub-desc
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          # Requires a Docker Hub PAT with Read, Write, and Delete scope.
+          # If DOCKERHUB_PAT is not set, falls back to DOCKERHUB_TOKEN.
+          password: ${{ secrets.DOCKERHUB_PAT || secrets.DOCKERHUB_TOKEN }}
           repository: ${{ env.DOCKERHUB_REPO }}
           short-description: "RepoSync Architecture Diagram — Interactive system architecture visualization"
           readme-filepath: ./README.md
+
+      - name: ⚠️ Docker Hub Description update status
+        if: steps.dockerhub-desc.outcome == 'failure'
+        run: |
+          echo "::warning::Docker Hub description update failed. This is non-critical."
+          echo "To fix: Create a Docker Hub PAT with 'Read, Write, and Delete' scope"
+          echo "and add it as the DOCKERHUB_PAT repository secret."
+

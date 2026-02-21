@@ -1,0 +1,118 @@
+# ──────────────────────────────────────────────────
+# Release Management
+# ──────────────────────────────────────────────────
+name: Release Management
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'architecture_diagram.html'
+      - 'Dockerfile'
+      - 'nginx.conf'
+      - 'action.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # ────────────── Create Release ──────────────
+  release:
+    name: 🏷️ Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Get next version
+        id: version
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Parse version components
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Increment patch version
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "New version: $NEW_VERSION"
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s (%h)" --no-merges HEAD)
+          else
+            CHANGES=$(git log --pretty=format:"- %s (%h)" --no-merges ${LATEST_TAG}..HEAD)
+          fi
+
+          if [ -z "$CHANGES" ]; then
+            CHANGES="- Maintenance updates and improvements"
+          fi
+
+          # Write to file for multi-line output
+          cat > changelog.md << 'CHANGELOG_EOF'
+          ## What's Changed
+
+          $CHANGES
+
+          ## Docker
+
+          ```bash
+          docker pull nadeeshame/reposync-architecture:${{ steps.version.outputs.version }}
+          ```
+
+          ## Links
+
+          - 🌐 [Live Demo](https://repo-sync-architecture.netlify.app/)
+          - 🐳 [Docker Hub](https://hub.docker.com/r/nadeeshame/reposync-architecture)
+          CHANGELOG_EOF
+
+          # Replace variables in changelog
+          sed -i "s|\$CHANGES|$CHANGES|g" changelog.md
+
+          echo "Generated changelog:"
+          cat changelog.md
+
+      - name: 🏷️ Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin ${{ steps.version.outputs.tag }}
+
+      - name: 📦 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "RepoSync Architecture ${{ steps.version.outputs.tag }}"
+          body: |
+            ## 🔄 RepoSync Architecture ${{ steps.version.outputs.tag }}
+
+            ### What's Changed
+            See commit history for detailed changes.
+
+            ### 🐳 Docker
+            ```bash
+            docker pull nadeeshame/reposync-architecture:${{ steps.version.outputs.tag }}
+            ```
+
+            ### 🌐 Links
+            - [Live Demo](https://repo-sync-architecture.netlify.app/)
+            - [Docker Hub](https://hub.docker.com/r/nadeeshame/reposync-architecture)
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

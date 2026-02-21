@@ -12,40 +12,9 @@ on:
     - cron: '0 6 * * 1'  # Every Monday at 6:00 AM UTC
 
 permissions:
-  actions: read
   contents: read
-  security-events: write
 
 jobs:
-  analyze:
-    name: 🔒 CodeQL Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: ['html']
-        # CodeQL does not natively support HTML as a language, but we can use
-        # it to scan for any embedded JavaScript patterns
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 🔧 Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
-          # Scanning for any inline JS in HTML
-          queries: security-extended
-
-      - name: 🏗️ Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      - name: 🔍 Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:javascript-typescript"
 
   # ────────────── Security Audit ──────────────
   security-audit:

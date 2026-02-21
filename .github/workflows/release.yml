@@ -62,16 +62,16 @@ jobs:
           fi
 
           # Write to file for multi-line output
-          cat > changelog.md << 'CHANGELOG_EOF'
+          cat > changelog.md <<CHANGELOG_EOF
           ## What's Changed
 
           $CHANGES
 
           ## Docker
 
-          ```bash
+          \`\`\`bash
           docker pull nadeeshame/reposync-architecture:${{ steps.version.outputs.version }}
-          ```
+          \`\`\`
 
           ## Links
 
@@ -79,8 +79,6 @@ jobs:
           - 🐳 [Docker Hub](https://hub.docker.com/r/nadeeshame/reposync-architecture)
           CHANGELOG_EOF
 
-          # Replace variables in changelog
-          sed -i "s|\$CHANGES|$CHANGES|g" changelog.md
 
           echo "Generated changelog:"
           cat changelog.md

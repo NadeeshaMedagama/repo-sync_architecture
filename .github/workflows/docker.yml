@@ -140,9 +140,10 @@ jobs:
         id: dockerhub-desc
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          # Requires a Docker Hub PAT with Read, Write, and Delete scope.
-          # If DOCKERHUB_PAT is not set, falls back to DOCKERHUB_TOKEN.
-          password: ${{ secrets.DOCKERHUB_PAT || secrets.DOCKERHUB_TOKEN }}
+          # ⚠️ Requires a Docker Hub PAT with 'Read, Write, and Delete' scope.
+          # 'Read & Write' alone is NOT enough — the Docker Hub description
+          # API requires the 'Delete' scope even for PATCH operations.
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ env.DOCKERHUB_REPO }}
           short-description: "RepoSync Architecture Diagram — Interactive system architecture visualization"
           readme-filepath: ./README.md
@@ -151,6 +152,6 @@ jobs:
         if: steps.dockerhub-desc.outcome == 'failure'
         run: |
           echo "::warning::Docker Hub description update failed. This is non-critical."
-          echo "To fix: Create a Docker Hub PAT with 'Read, Write, and Delete' scope"
-          echo "and add it as the DOCKERHUB_PAT repository secret."
+          echo "To fix: Regenerate your Docker Hub PAT (DOCKERHUB_TOKEN) with 'Read, Write, and Delete' scope."
+          echo "'Read & Write' scope alone is NOT sufficient — the description API requires 'Delete' scope."
 

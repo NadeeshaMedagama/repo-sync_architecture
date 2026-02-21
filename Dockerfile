@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────────
 # Stage 1: Build validation
 # ──────────────────────────────────────────────────
-FROM node:20-alpine AS validator
+FROM node:25-alpine AS validator
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN test -s architecture_diagram.html || (echo "ERROR: architecture_diagram.html
 # ──────────────────────────────────────────────────
 # Stage 2: Production with Nginx
 # ──────────────────────────────────────────────────
-FROM nginx:1.27-alpine AS production
+FROM nginx:1.29-alpine AS production
 
 # Add metadata labels
 LABEL maintainer="nadeeshame"

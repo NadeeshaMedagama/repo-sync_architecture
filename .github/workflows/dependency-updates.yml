@@ -19,7 +19,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Dependabot metadata
         id: metadata

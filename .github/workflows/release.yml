@@ -11,6 +11,12 @@ on:
       - 'Dockerfile'
       - 'nginx.conf'
       - 'action.yml'
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (e.g., v1.2.3). Leave empty for auto-increment.'
+        required: false
+        default: ''
 
 permissions:
   contents: write

@@ -16,7 +16,7 @@ permissions:
   packages: write
 
 env:
-  DOCKERHUB_REPO: nadeeshame/reposync-architecture
+  DOCKERHUB_REPO: nadeeshamedagama/reposync-architecture
   GHCR_REPO: ghcr.io/${{ github.repository_owner }}/reposync-architecture
 
 jobs:
@@ -93,6 +93,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: ✅ Verify Docker Hub credentials
+        run: |
+          echo "Verifying Docker Hub login..."
+          docker info | grep -i username || true
+          # Verify the repository is accessible
+          TOKEN=$(curl -s -H "Content-Type: application/json" \
+            -X POST -d '{"username":"${{ secrets.DOCKERHUB_USERNAME }}","password":"${{ secrets.DOCKERHUB_TOKEN }}"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "❌ Docker Hub authentication failed. Please verify DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets."
+            exit 1
+          fi
+          echo "✅ Docker Hub authentication verified"
 
       - name: 📋 Extract metadata
         id: meta

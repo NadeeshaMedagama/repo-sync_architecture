@@ -1,0 +1,54 @@
+# ──────────────────────────────────────────────────
+# Dependency Updates — Auto-merge Dependabot PRs
+# ──────────────────────────────────────────────────
+name: Dependency Updates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # ────────────── Auto-approve & Merge Dependabot PRs ──────────────
+  dependabot-auto-merge:
+    name: 🔄 Auto-merge Dependabot
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: ✅ Auto-approve patch & minor updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔀 Auto-merge patch & minor updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Summary
+        run: |
+          echo "## 🔄 Dependency Update" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Package** | ${{ steps.metadata.outputs.dependency-names }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Update Type** | ${{ steps.metadata.outputs.update-type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Previous Version** | ${{ steps.metadata.outputs.previous-version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **New Version** | ${{ steps.metadata.outputs.new-version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Auto-merged** | ${{ steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor' }} |" >> $GITHUB_STEP_SUMMARY

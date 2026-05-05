@@ -135,7 +135,7 @@ jobs:
 
       - name: 📝 Docker Hub Description
         if: github.ref == 'refs/heads/master'
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         continue-on-error: true
         id: dockerhub-desc
         with:

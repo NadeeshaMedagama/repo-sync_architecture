@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────────
 # Stage 1: Build validation
 # ──────────────────────────────────────────────────
-FROM node:25-alpine AS validator
+FROM node:26-alpine AS validator
 
 WORKDIR /app
 
